@@ -1,0 +1,438 @@
+//# sourceMappingURL=axios.map
+if(document.getElementById("app-ed-pr")){
+// register modal component
+Vue.component('modal', {
+  template: '#modal-template'
+});
+
+// start app
+new Vue({
+  el: '#app-ed-pr',
+  data: {
+    showModal: false
+  }
+});
+
+}
+
+if(document.getElementById("app-ed-us")){
+var emailRE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+
+// start app
+new Vue({
+  el: '#app-ed-us',
+  mounted: function() {
+    this.getCuentas();
+  },
+  data: {
+    type:'A',
+    type1:'0',
+    cuentas: [],
+    name:'',email:'',
+    nombre:'',
+    correo:'',
+    pass:''
+  },
+  methods:{
+    ValidarInputs: function(){
+
+  if(this.nombre){}else{}
+  if(this.correo){}else{}
+  if(this.pass){}else{}
+    },
+
+
+   getCuentas: function() {
+
+    var urlKeeps = '/api/user';
+    axios.get(urlKeeps).then(response => {
+      this.cuentas = response.data;
+    
+    
+      
+ 
+
+    });
+//
+  },
+
+  putCuentas:function(){
+  this.ValidarInputs();
+    axios.put('/api/userput', { 
+
+      name: this.nombre,
+      email: this.correo,
+      password:this.pass
+    }).then(function(response){
+toastr.success('Modificado');
+      
+    }).catch(function (error) {
+toastr.error('No se pudo procesar la peticion!')
+
+    });
+    this.getCuentas();
+    this.howType1('0');
+   this.limpiarInputs();
+  },
+  howType: function(tipo) {
+    this.type=tipo;
+  },
+  howType1: function(tipo) {
+    this.type1=tipo;
+  },
+  limpiarInputs:function(){ this.nombre=''
+    this.correo=''
+    this.pass=''}
+},
+computed: {
+
+  validandoInputs: function(){
+
+    return this.nombre || (this.correo && emailRE.test(this.correo)) || this.pass;
+  }
+}
+});
+
+}
+
+
+//Este componente es para publicar anuncios
+if(document.getElementById("publicar-axios")){
+
+
+  // Initialize Firebase
+  var dir="";
+
+
+      var config = {
+    apiKey: "AIzaSyC4QkFO3mK-yJhdTM-2vMINKqGHEP28OLw",
+    authDomain: "auth-firebase-ea6dc.firebaseapp.com",
+    databaseURL: "https://auth-firebase-ea6dc.firebaseio.com",
+    storageBucket: "auth-firebase-ea6dc.appspot.com",
+  };
+  firebase.initializeApp(config);
+
+    // Servicios de APIs Firebase
+    var authService = firebase.auth();
+    var storageService = firebase.storage();
+
+    window.onload = function() {
+      // realizamos la autenticación anónima (debe estar activada en la consola de Firebase)
+      authService.signInAnonymously()
+        .catch(function(error) {
+          console.error('Detectado error de autenticación', error);
+        });
+
+      // asociamos el manejador de eventos sobre el INPUT FILE
+      document.getElementById('campoarchivo').addEventListener('change', function(evento){
+        evento.preventDefault();
+        document.getElementById('oculto').style.display = 'block';
+        document.getElementById('oculto1').style.display = 'none';
+       // document.getElementById('btn_publicar').style.display = 'none';
+
+        var archivo  = evento.target.files[0];
+        subirArchivo(archivo);
+      });
+    }
+
+    // función que se encargará de subir el archivo
+    function subirArchivo(archivo) {
+      // creo una referencia al lugar donde guardaremos el archivo
+      var refStorage = storageService.ref('micarpeta').child(archivo.name);
+      // Comienzo la tarea de upload
+      var uploadTask = refStorage.put(archivo);
+
+      // defino un evento para saber qué pasa con ese upload iniciado
+
+
+      uploadTask.on('state_changed', null,
+        function(error){
+          console.log('Error al subir el archivo', error);
+        },
+        function(){
+ toastr.info('listo');
+          console.log('Subida completada');
+          document.getElementById('oculto').style.display = 'none';
+           document.getElementById('oculto1').style.display = 'block';
+           //  document.getElementById('btn_publicar').style.display = 'block';
+           dir =uploadTask.snapshot.downloadURL;
+          mensajeFinalizado(uploadTask.snapshot.downloadURL, uploadTask.snapshot.totalBytes);
+        }
+      );
+    }
+
+    // a esta función la invocamos para mostrar el mensaje final después del upload
+    function mensajeFinalizado(url, bytes) {
+     
+      var elMensaje = document.getElementById('mensaje');
+      var textoMensaje = '<img src="'+url+'" width="64" height="64">';
+      textoMensaje += '<br>Bytes subidos: ' + bytes;
+      textoMensaje += '<br><a href="' + url + '">Ver el fichero</a>';
+      
+      elMensaje.innerHTML = textoMensaje;
+    }
+
+   
+
+
+
+  new Vue({
+    el:'#publicar-axios',
+
+    created:function(){
+      this.cargar(1);
+    },
+    data:{
+  publicacion: {
+      nombre: '',
+      descripcion: '',
+      descuento:0,
+      fecha_final:'',
+      precio:0
+    },
+    publicaciones:[],
+    total:'',
+    counter: 1
+    },
+    methods:{
+      cargar:function(numero){
+      var urlKeeps = '/api/publica/?page='+numero;
+      axios.get(urlKeeps).then(response => {
+        this.publicaciones = response.data.data;
+      this.total=response.data.last_page;
+    });
+      },
+      publicar:function(){
+    axios.post('/api/publicapost/', {
+    nombre: this.publicacion.nombre,
+    imagen:dir,
+    descripcion:this.publicacion.descripcion,
+    precio: this.publicacion.precio,
+    descuento:this.publicacion.descuento,
+    fecha_final:this.publicacion.fecha_final
+  })
+  .then(function (response) {
+toastr.success('Publicado correctamente!');
+    console.log(response);
+  })
+  .catch(function (error) {
+    toastr.error('No se pudo publicar');
+    console.log(error);
+  });
+  this.cargar();
+      },
+      deleteKeep: function(id) {// eliminar datos con axios
+      var url = '/api/publicapostd/' + id;
+      axios.delete(url).then(response => { //eliminamos
+        this.cargar(1);
+        toastr.success('Eliminado correctamente'); //mensaje
+      });
+    }
+
+    }
+
+
+  });
+}
+//Este componente es para editar la parte del header
+if(document.getElementById("header-editar")){
+
+new Vue({
+  el: "#header-editar",
+  created:function() {
+  this.cargarPerfil();
+  },
+  data:{
+  perfil:[]
+  },
+  methods:{
+
+cargarPerfil:function() {
+   var urlKeeps = '/api/perfil';
+    axios.get(urlKeeps).then(response => {
+      this.perfil=response.data;
+      console.log(this.perfil=response.data);
+    });
+}
+
+  }
+
+  
+});
+}
+//este componente carga las publicaciones en el frontend-index 
+if(document.getElementById("publicaciones")){
+
+Vue.filter('mayusculas',function function_name(value) {
+return value.toUpperCase();
+});
+
+Vue.filter('currency', function (value) {
+    return value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+});
+
+new Vue({
+
+    created:function(){
+      this.cargarPublicaciones();
+    },
+    el: "#publicaciones",
+    data:{
+      searchText:'',
+      publicaciones:[],
+      mundos:
+    [
+    {nombre:'San Agustin',fondo:'images/sanagustin.png',vehiculo:'images/cicla.png',sel:1,descripcion:'En San Agustín se encuentran gran cantidad de sitios donde se exponen vestigios arqueológicos.'},
+    {nombre:'la Tatacoa',fondo:'images/desierto.jpg',vehiculo:'images/cuatri.png',sel:2,descripcion:'A medio camino entre Bogotá y San Agustín se encuentra el Desierto de la Tatacoa. Se trata de un impresionante paisaje de acantilados y barrancos erosionados, esculpidas por la lluvia poco frecuente.'},
+    {nombre:'Represa betania',fondo:'images/laguna.png',vehiculo:'images/lancha.png',sel:3,descripcion:'Es considerada una de las fuentes de energía más importantes de la región, además de ser un lugar ideal para practicar deportes náuticos, el descanso y la pesca. '},
+    {nombre:'Neiva',fondo:'images/ciudad.png',vehiculo:'images/carro.png',sel:4,descripcion:'Neiva es la capital del departamento del Huila, en Colombia. Se ubica entre la Cordillera Central y Oriental, en una planicie sobre la margen oriental del río Magdalena, en el valle del mismo nombre; cruzada por el río Las Ceibas y el Río del Oro.'}
+    ]
+    },
+    methods:{
+
+      cargarPublicaciones:function(){
+
+    axios.get('/api/publicaciones').then(response => {
+      this.publicaciones=response.data;
+      console.log(this.publicaciones);
+    });
+      }
+    }
+  
+    
+  });
+
+}
+
+
+
+if(document.getElementById("editar-slider")){
+
+
+
+
+
+
+
+
+// Initialize Firebase
+  var direccion_url="";
+
+
+    var config = {
+    apiKey: "AIzaSyC4QkFO3mK-yJhdTM-2vMINKqGHEP28OLw",
+    authDomain: "auth-firebase-ea6dc.firebaseapp.com",
+    databaseURL: "https://auth-firebase-ea6dc.firebaseio.com",
+    storageBucket: "auth-firebase-ea6dc.appspot.com",
+  };
+  firebase.initializeApp(config);
+
+    // Servicios de APIs Firebase
+    var authService = firebase.auth();
+    var storageService = firebase.storage();
+
+    window.onload = function() {
+      // realizamos la autenticación anónima (debe estar activada en la consola de Firebase)
+      authService.signInAnonymously()
+        .catch(function(error) {
+          console.error('Detectado error de autenticación', error);
+        });
+
+      // asociamos el manejador de eventos sobre el INPUT FILE
+      document.getElementById('urlarchivo').addEventListener('change', function(evento){
+        evento.preventDefault();
+        document.getElementById('o').style.display = 'block';
+        document.getElementById('o1').style.display = 'none';
+      
+
+        var archivo  = evento.target.files[0];
+        subirArchivo(archivo);
+      });
+    }
+
+    // función que se encargará de subir el archivo
+    function subirArchivo(archivo) {
+      // creo una referencia al lugar donde guardaremos el archivo
+      var refStorage = storageService.ref('micarpeta').child(archivo.name);
+      // Comienzo la tarea de upload
+      var uploadTask = refStorage.put(archivo);
+
+      // defino un evento para saber qué pasa con ese upload iniciado
+
+
+      uploadTask.on('state_changed', null,
+        function(error){
+          console.log('Error al subir el archivo', error);
+        },
+        function(){
+ toastr.info('listo');
+
+          direccion_url =uploadTask.snapshot.downloadURL;
+          var elMensaje = document.getElementById('mensaje');
+             var textoMensaje = '<img src="'+direccion_url+'" width="64" height="64">';
+             elMensaje.innerHTML = textoMensaje;
+         
+          document.getElementById('o').style.display = 'none';
+           document.getElementById('o1').style.display = 'block';
+        
+            
+             
+        }
+      );
+    }
+
+   
+
+
+
+
+
+
+
+
+
+
+  new Vue({
+    created:function(){
+      this.cargarImagenes();
+    },
+    el: "#editar-slider",
+    data:{ imagenes:[],slider:[]},
+    methods:{ 
+      cargarImagenes:function(){
+
+axios.get('/api/getimagenes').then(response => {
+  this.imagenes = response.data;
+  this.slider = response.data;
+      console.log(this.imagenes);
+    });
+
+      },
+       deleteImagen: function(id) {// eliminar datos con axios
+      var url = '/api/deleteimagenes/' + id;
+      axios.delete(url).then(response => { //eliminamos
+       this.cargarImagenes();
+        toastr.success('Eliminado correctamente'); //mensaje
+      });
+
+
+},
+postImagen:function(){
+    axios.post('/api/postimagenes', {
+    url:direccion_url
+  })
+  .then(function (response) {
+toastr.success('Publicado correctamente!');
+    console.log(response);
+  })
+  .catch(function (error) {
+    toastr.error('No se pudo publicar');
+    console.log(error);
+  });
+  this.cargarImagenes();
+      }
+    }
+
+
+  });
+}

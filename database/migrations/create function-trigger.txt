@@ -1,0 +1,47 @@
+create function SP_Test() returns Trigger
+
+as
+$$
+begin
+
+insert into public.profiles(
+            id, name, phone, "idCategory", lng, lat, web, facebook, twitter, 
+            instagram, address, description, status, created_at, updated_at)
+	    VALUES (old.id,old.name,12, 1, 1, 1, 'sdsd', 'fb', 'tw', 
+            'inst', 'sd', 'description', 1, now(),now());
+
+return new;
+End
+$$
+Language plpgsql;
+
+
+
+
+
+
+
+
+
+
+
+create function insert_appearance() returns Trigger
+as
+$$
+begin
+
+INSERT INTO public.appearances(
+            id, color1, color2, color3, background, bgx, bgy, logo, status, 
+            created_at, updated_at)
+    VALUES (new.id,"#90caf9","#90caf9","#90caf9","/img/bg-event-day.jpg",1,0,0,new.created_at,new.updated_at,"/img/bg-event-day.jpg");
+return new;
+End
+$$
+Language plpgsql;
+
+   CREATE TRIGGER create_appearance
+  AFTER INSERT
+  ON public.profiles
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.insert_appearance();
+
